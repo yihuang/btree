@@ -13,16 +13,14 @@ import (
 // provides expected O(log n) time complexity for insert, delete, and search operations.
 // It uses ranks similar to skip lists to maintain balance probabilistically.
 type ZipTreeG[T any] struct {
-	isoid        uint64           // Copy-on-write isolation ID
-	mu           *sync.RWMutex    // Optional locking
-	root         *zipNode[T]      // Root node
-	count        int              // Total item count
-	locks        bool             // Whether to use locking
-	copyItems    bool             // Whether items implement Copy()
-	isoCopyItems bool             // Whether items implement IsoCopy()
-	readOnly     bool             // Read-only flag
-	less         func(a, b T) bool // Comparison function
-	empty        T                // Zero value for type T
+	isoid    uint64            // Copy-on-write isolation ID
+	mu       *sync.RWMutex     // Optional locking
+	root     *zipNode[T]       // Root node
+	count    int               // Total item count
+	locks    bool              // Whether to use locking
+	readOnly bool              // Read-only flag
+	less     func(a, b T) bool // Comparison function
+	empty    T                 // Zero value for type T
 	// Random number generator for rank generation
 	rng *rand.Rand
 }
@@ -74,12 +72,6 @@ func NewZipTreeGOptions[T any](less func(a, b T) bool, opts ZipOptions) *ZipTree
 		seed = rand.Int63()
 	}
 	tr.rng = rand.New(rand.NewSource(seed))
-
-	// Check if items implement copy interfaces
-	_, tr.copyItems = ((interface{})(tr.empty)).(copier[T])
-	if !tr.copyItems {
-		_, tr.isoCopyItems = ((interface{})(tr.empty)).(isoCopier[T])
-	}
 
 	if opts.ReadOnly {
 		tr.Freeze()
@@ -634,4 +626,3 @@ func (tr *ZipTreeG[T]) descendNode(x *zipNode[T], pivot T, iter func(item T) boo
 	// Always explore left subtree
 	return tr.descendNode(x.left, pivot, iter)
 }
-
